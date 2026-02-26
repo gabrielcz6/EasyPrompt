@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Fragment {
+  id        String   @id @default(uuid())
+  label     String
+  content   String
+  category  String
+  prompts   Prompt[] // Variables imported by different Prompts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AiModel {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  provider  String   @default("openai")
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Prompt {
+  id          String          @id @default(uuid())
+  name        String
+  description String?
+  versions    PromptVersion[]
+  fragments   Fragment[]      // Variables imported to this Prompt explicitly
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model PromptVersion {
+  id            String      @id @default(uuid())
+  promptId      String
+  prompt        Prompt      @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  templateText  String
+  modelConfig   Json
+  versionNumber Int
+  executions    Execution[]
+  createdAt     DateTime    @default(now())
+}
+
+model Execution {
+  id             String        @id @default(uuid())
+  versionId      String
+  version        PromptVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  variablesUsed  Json
+  renderedPrompt String
+  aiOutput       String
+  latencyMs      Int
+  tokensTotal    Int
+  createdAt      DateTime      @default(now())
+}
+
+model UserSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+

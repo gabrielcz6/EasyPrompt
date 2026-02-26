@@ -1,0 +1,5 @@
+src/app/layout.tsx(4,25): error TS2307: Cannot find module '@/components/ui/toaster' or its corresponding type declarations.
+src/components/builder/FragmentSidebar.tsx(6,28): error TS2307: Cannot find module '@/components/ui/scroll-area' or its corresponding type declarations.
+src/components/builder/PromptEditor.tsx(5,26): error TS2307: Cannot find module '@/components/ui/textarea' or its corresponding type declarations.
+src/components/builder/VariablesPanel.tsx(5,28): error TS2307: Cannot find module '@/components/ui/scroll-area' or its corresponding type declarations.
+src/components/executions/ExecutionHistory.tsx(5,28): error TS2307: Cannot find module '@/components/ui/scroll-area' or its corresponding type declarations.
