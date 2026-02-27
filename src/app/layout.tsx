@@ -12,7 +12,7 @@ import { LanguageProvider } from '@/context/LanguageContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-    title: 'Prompt Manager',
+    title: 'EasyPrompt',
     description: 'Design, version and test AI Prompts',
 }
 

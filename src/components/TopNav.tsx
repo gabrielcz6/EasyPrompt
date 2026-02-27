@@ -69,7 +69,7 @@ export function TopNav() {
         <div className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50 px-6 py-3 shadow-sm">
             <div className="flex items-center justify-between gap-6">
                 <div className="flex items-center gap-6">
-                    <h1 className="text-xl font-extrabold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent mr-4 tracking-tight">Prompt Manager</h1>
+                    <h1 className="text-xl font-extrabold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent mr-4 tracking-tight">EasyPrompt</h1>
                     <nav className="flex items-center gap-2">
                         {visibleRoutes.map((route) => (
                             <Link
