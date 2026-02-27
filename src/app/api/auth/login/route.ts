@@ -53,8 +53,10 @@ export async function POST(req: NextRequest) {
 
         response.cookies.set(COOKIE_NAME, token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            // En producción (VPS), si no tienes SSL activo (HTTPS), el navegador bloquea la cookie si secure es true.
+            // Para que funcione en tu IP de Digital Ocean sin SSL todavía, lo ponemos en false.
+            secure: false,
+            sameSite: 'lax', // Cambiado a 'lax' para mejor compatibilidad en navegadores
             maxAge: 60 * 60 * 24 * 7, // 7 days
             path: '/',
         });
