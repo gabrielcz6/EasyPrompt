@@ -65,3 +65,13 @@ model UserSetting {
   updatedAt DateTime @updatedAt
 }
 
+model User {
+  id                  String   @id @default(uuid())
+  username            String   @unique
+  passwordHash        String
+  role                String   @default("admin")
+  needsPasswordChange Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+

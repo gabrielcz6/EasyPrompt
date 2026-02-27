@@ -355,6 +355,21 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                     renderedPrompt={multiPanoramicData.group.renderedPrompt}
                     modelConfig={multiPanoramicData.group.modelConfig}
                     variations={multiPanoramicData.group.variations}
+                    onDeleteVariation={async (id) => {
+                        await handleDelete([id]);
+                        // Update local modal variations state
+                        setMultiPanoramicData(prev => {
+                            if (!prev.group) return prev;
+                            const remainingVariations = prev.group.variations.filter((v: any) => v.id !== id);
+                            if (remainingVariations.length === 0) {
+                                return { open: false, group: null };
+                            }
+                            return {
+                                ...prev,
+                                group: { ...prev.group, variations: remainingVariations }
+                            };
+                        });
+                    }}
                 />
             )}
         </div>

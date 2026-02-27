@@ -34,10 +34,10 @@ export const translations = {
             comparison: 'Ver Comparativa',
             tokens: 'tkns',
             latency: 'ms',
-            confirmDelete: '¿Borrar esta ejecución permanentemente?',
+            confirmDelete: 'Borrada permanentemente esta ejecución ',
         },
         comparison: {
-            title: 'Comparación Pro',
+            title: 'Comparación Prompts',
             prompt: 'Prompt Compartido',
             responses: 'Resultados',
             maximize: 'Expandir',

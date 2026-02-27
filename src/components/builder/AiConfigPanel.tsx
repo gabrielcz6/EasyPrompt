@@ -24,6 +24,7 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
     const [model, setModel] = useState('gpt-5.2');
     const [temperature, setTemperature] = useState(0.7);
     const [useMaxTokens, setUseMaxTokens] = useState(false);
+    const [maxTokens, setMaxTokens] = useState(2000);
 
     const [models, setModels] = useState<{ id: string, name: string, provider: string }[]>([]);
     const [isExecuting, setIsExecuting] = useState(false);
@@ -57,7 +58,12 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
             if (version && version.modelConfig) {
                 if (version.modelConfig.model) setModel(version.modelConfig.model);
                 if (version.modelConfig.temperature !== undefined) setTemperature(version.modelConfig.temperature);
-                if (version.modelConfig.max_tokens !== undefined) setUseMaxTokens(version.modelConfig.max_tokens > 1500);
+                if (version.modelConfig.max_tokens !== undefined) {
+                    setUseMaxTokens(true);
+                    setMaxTokens(version.modelConfig.max_tokens);
+                } else {
+                    setUseMaxTokens(false);
+                }
             }
         };
 
@@ -84,7 +90,12 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
                 body: JSON.stringify({
                     promptId: targetPromptId,
                     templateText,
-                    modelConfig: { provider: "openai", model, temperature, max_tokens: useMaxTokens ? 4096 : 1024 },
+                    modelConfig: {
+                        provider: "openai",
+                        model,
+                        temperature,
+                        ...(useMaxTokens ? { max_tokens: maxTokens } : {})
+                    },
                     variablesUsed: variableValues,
                 })
             });
@@ -145,7 +156,7 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
                 const changed = latest.templateText !== templateText ||
                     latest.modelConfig.model !== model ||
                     latest.modelConfig.temperature !== temperature ||
-                    latest.modelConfig.max_tokens !== (useMaxTokens ? 4096 : 1024);
+                    latest.modelConfig.max_tokens !== (useMaxTokens ? maxTokens : undefined);
 
                 if (changed) {
                     setShowVersionModal(true);
@@ -194,15 +205,36 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
                     />
                 </div>
 
-                <div className="space-y-3 pb-3">
+                <div className="space-y-4 pb-3">
                     <div className="flex justify-between items-center ml-1">
-                        <Label className="text-muted-foreground font-semibold cursor-pointer" onClick={() => setUseMaxTokens(!useMaxTokens)}>{language === 'es' ? 'Máxima Salida (Tokens)' : 'Max Output (Tokens)'}</Label>
+                        <Label className="text-muted-foreground font-semibold cursor-pointer" onClick={() => setUseMaxTokens(!useMaxTokens)}>
+                            {language === 'es' ? 'Límite de Salida' : 'Output Limit'}
+                        </Label>
                         <Switch
                             checked={useMaxTokens}
                             onCheckedChange={setUseMaxTokens}
                             className="data-[state=checked]:bg-violet-600 data-[state=unchecked]:bg-border"
                         />
                     </div>
+
+                    {useMaxTokens && (
+                        <div className="flex flex-col gap-2 ml-1 animate-in slide-in-from-top-2 duration-200">
+                            <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
+                                {language === 'es' ? 'Tokens Máximos' : 'Max Tokens'}
+                            </Label>
+                            <Input
+                                type="number"
+                                value={maxTokens}
+                                onChange={(e) => setMaxTokens(parseInt(e.target.value) || 0)}
+                                className="bg-muted border-border text-foreground focus:ring-violet-500 rounded-lg h-10 font-medium"
+                                min={1}
+                                max={4096}
+                            />
+                            <p className="text-[10px] text-muted-foreground/70 italic">
+                                {language === 'es' ? 'Límite sugerido entre 1 y 4096 tokens.' : 'Suggested limit between 1 and 4096 tokens.'}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 

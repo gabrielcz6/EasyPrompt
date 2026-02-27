@@ -1,8 +1,23 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
+    // ─── Superadmin user ───────────────────────────────────────────────
+    const username = 'admin'
+    const plainPassword = 'admin'
+    const passwordHash = await bcrypt.hash(plainPassword, 12)
+    const needsPasswordChange = true
+
+    const user = await prisma.user.upsert({
+        where: { username },
+        update: { passwordHash, role: 'superadmin', needsPasswordChange },
+        create: { username, passwordHash, role: 'superadmin', needsPasswordChange },
+    })
+    console.log(`✅ Superadmin listo: ${user.username} / ${plainPassword} (Cambio obligatorio activo)`)
+
+    // ─── Sample fragments ──────────────────────────────────────────────
     await prisma.fragment.deleteMany()
 
     await prisma.fragment.create({
@@ -29,7 +44,7 @@ async function main() {
         }
     })
 
-    console.log('Seeded database with basic fragments.')
+    console.log('✅ Fragments seeded.')
 }
 
 main()

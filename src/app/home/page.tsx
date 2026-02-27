@@ -1,13 +1,24 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, History, Boxes, Activity, ArrowRight, Github, Linkedin, Mail, MessageCircle } from 'lucide-react';
+import { Sparkles, History, Boxes, Activity, ArrowRight, Github, Linkedin, Mail, MessageCircle, LogIn, LayoutTemplate } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function HomePage() {
     const { language, t } = useLanguage();
+    const [user, setUser] = useState<{ username: string; role: string } | null>(null);
+    const [loadingAuth, setLoadingAuth] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/auth/me')
+            .then(res => res.ok ? res.json() : null)
+            .then(data => setUser(data))
+            .catch(() => setUser(null))
+            .finally(() => setLoadingAuth(false));
+    }, []);
 
     return (
         <div className="flex-1 min-h-full flex flex-col pt-16 px-8 items-center max-w-6xl mx-auto w-full pb-20">
@@ -28,13 +39,16 @@ export default function HomePage() {
                     {t.home.subtitle}
                 </p>
 
-                <div className="pt-8">
-                    <Link href="/prompts">
-                        <Button className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-xl shadow-violet-500/30 rounded-full px-10 h-16 text-lg font-bold transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] gap-3">
-                            {t.home.getStarted}
-                            <ArrowRight size={20} />
-                        </Button>
-                    </Link>
+                <div className="pt-8 h-20 flex items-center justify-center">
+                    {!loadingAuth && !user && (
+                        <Link href="/login">
+                            <Button className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-xl shadow-violet-500/30 rounded-full px-10 h-16 text-lg font-bold transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] gap-3">
+                                <LogIn size={20} />
+                                {language === 'es' ? 'Ingresar' : 'Login / Sign In'}
+                                <ArrowRight size={20} />
+                            </Button>
+                        </Link>
+                    )}
                 </div>
             </div>
 

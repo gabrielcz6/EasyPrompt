@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Share2, FileText, ChevronRight, ChevronLeft, Minimize2, Maximize2, LayoutPanelLeft } from 'lucide-react';
+import { Share2, FileText, ChevronRight, ChevronLeft, Minimize2, Maximize2, LayoutPanelLeft, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import LZString from 'lz-string';
 import { exportMultiResponseToDocx } from '@/lib/docx-exporter';
@@ -23,6 +23,7 @@ interface PanoramicMultiResponseModalProps {
     renderedPrompt: string;
     modelConfig: any;
     variations: Variation[];
+    onDeleteVariation?: (id: string) => void;
 }
 
 export function PanoramicMultiResponseModal({
@@ -31,6 +32,7 @@ export function PanoramicMultiResponseModal({
     renderedPrompt,
     modelConfig,
     variations,
+    onDeleteVariation,
 }: PanoramicMultiResponseModalProps) {
     const { language, t } = useLanguage();
     const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
@@ -197,14 +199,31 @@ export function PanoramicMultiResponseModal({
                                                                 </span>
                                                                 <span className="text-[11px] font-bold text-muted-foreground bg-background px-2 py-1 rounded-md border border-border">{language === 'es' ? 'V' : 'V'}{v.versionNumber}</span>
                                                             </div>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => toggleCollapse(v.id)}
-                                                                className="h-8 w-8 text-muted-foreground hover:text-violet-600 dark:hover:text-violet-400 opacity-60 group-hover/card:opacity-100 transition-all hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-full"
-                                                            >
-                                                                <Minimize2 size={13} />
-                                                            </Button>
+                                                            <div className="flex items-center gap-1">
+                                                                {onDeleteVariation && (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            if (confirm(t.history.confirmDelete)) {
+                                                                                onDeleteVariation(v.id);
+                                                                            }
+                                                                        }}
+                                                                        className="h-8 w-8 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 opacity-60 group-hover/card:opacity-100 transition-all hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full"
+                                                                    >
+                                                                        <Trash2 size={13} />
+                                                                    </Button>
+                                                                )}
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => toggleCollapse(v.id)}
+                                                                    className="h-8 w-8 text-muted-foreground hover:text-violet-600 dark:hover:text-violet-400 opacity-60 group-hover/card:opacity-100 transition-all hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-full"
+                                                                >
+                                                                    <Minimize2 size={13} />
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center justify-between w-full mt-3">
                                                             <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">{new Date(v.createdAt).toLocaleDateString()}</span>

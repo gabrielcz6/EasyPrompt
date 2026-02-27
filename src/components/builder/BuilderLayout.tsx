@@ -215,7 +215,7 @@ export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
         <div className="flex h-full overflow-hidden bg-background text-foreground">
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 {/* Left Sidebar: Fragments */}
-                <div className="w-64 border-r border-border bg-card z-10 shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] flex flex-col relative">
+                <div className="w-80 border-r border-border bg-card z-10 shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] flex flex-col relative">
                     <FragmentSidebar
                         promptId={promptId}
                         fragments={promptData?.fragments || []}
@@ -265,7 +265,7 @@ export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
                 {/* Drag Overlay for smooth following */}
                 <DragOverlay dropAnimation={null}>
                     {activeDragData ? (
-                        <div className="p-3 bg-white border border-violet-500 shadow-2xl rounded-xl opacity-95 scale-105 pointer-events-none drop-shadow-xl w-48 rotate-[-2deg]">
+                        <div className="p-3 bg-white border border-violet-500 shadow-2xl rounded-xl opacity-95 scale-105 pointer-events-none drop-shadow-xl w-72 rotate-[-2deg]">
                             <div className="text-sm font-bold text-violet-700 truncate">
                                 {activeDragData.isList && activeDragData.selectedOption ? activeDragData.selectedOption : activeDragData.label}
                             </div>

@@ -44,7 +44,7 @@ function DraggableFragment({ fragment }: { fragment: Fragment }) {
     });
 
     return (
-        <Card className={`p-3 mb-3 bg-card border-border shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-300 ${isDragging ? 'opacity-50' : ''}`}>
+        <Card className={`w-full p-4 mb-4 bg-card border-border shadow-sm transition-all duration-300 hover:shadow-lg hover:border-violet-300 hover:-translate-y-0.5 ${isDragging ? 'opacity-50 ring-2 ring-violet-500 ring-offset-2' : ''}`}>
             <div className="flex items-start gap-3">
                 <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing hover:bg-muted p-1.5 rounded-md mt-0.5" title={language === 'es' ? "Arrastrar al editor" : "Drag to editor"}>
                     <GripVertical size={16} className="text-muted-foreground" />

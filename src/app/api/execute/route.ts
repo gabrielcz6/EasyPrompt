@@ -84,13 +84,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Falta configurar OPENAI_API_KEY en el servidor' }, { status: 500 });
         }
 
-        const requestedMaxTokens = modelConfig.max_tokens !== undefined ? parseInt(modelConfig.max_tokens) : 2000;
-        const safeMaxTokens = Math.min(requestedMaxTokens, 4096);
-
         const response = await openai.chat.completions.create({
             model: modelConfig.model || 'gpt-4o',
             temperature: modelConfig.temperature !== undefined ? parseFloat(modelConfig.temperature) : 0.7,
-            max_completion_tokens: safeMaxTokens,
+            ...(modelConfig.max_tokens !== undefined ? { max_completion_tokens: Math.min(parseInt(modelConfig.max_tokens), 4096) } : {}),
             messages: [{ role: 'user', content: renderedPrompt }],
         });
 
