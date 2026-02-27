@@ -45,20 +45,35 @@ npm install
 ### 3. Setup Environment Variables
 Rename `.env.example` to `.env` and set:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/prompt_manager?schema=public"
+# Database Configuration
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=admin123
+POSTGRES_DB=mydb
+POSTGRES_PORT=5432
+DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public"
+
+# OpenAI API Key
 OPENAI_API_KEY="sk-your-openai-api-key"
 ```
 
-### 4. Database Setup (Prisma)
+### 4. Running with Docker (Recommended) 🐳
+The project is configured to synchronize your `.env` variables with Docker Compose.
+```bash
+docker-compose up -d --build
+```
+This will start both the PostgreSQL database and the Next.js application.
+
+### 5. Manual Setup (Alternative)
+First, initialize the database:
 ```bash
 npx prisma generate
 npx prisma db push
 ```
-
-### 5. Run Server
+Then run the development server:
 ```bash
 npm run dev
 ```
+
 
 ---
 ---
@@ -88,6 +103,34 @@ Una plataforma modular y visual (tipo "builder") diseñada para **potenciar la c
 - **Tailwind CSS** + **Radix UI** para una interfaz moderna y Dark Mode nativo.
 - **docx.js** para la generación profesional de documentos Word.
 - **lz-string** para la compresión de datos compartidos en URL.
+
+---
+
+## 🚀 Instalación y Ejecución (ES)
+
+### 1. Configurar Variables de Entorno
+Copia el archivo `.env.example` a `.env` y configura tus credenciales:
+```env
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=admin123
+POSTGRES_DB=mydb
+DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}?schema=public"
+OPENAI_API_KEY="tu-api-key-de-openai"
+```
+
+### 2. Ejecutar con Docker (Recomendado) 🐳
+```bash
+docker-compose up -d --build
+```
+Esto levantará automáticamente la base de datos y la aplicación sincronizando los valores de tu `.env`.
+
+### 3. Ejecución Manual (Alternativa)
+```bash
+npm install
+npx prisma db push
+npm run dev
+```
+
 
 ---
 *Desarrollado con ❤️ para elevar el standard del Prompt Engineering.*

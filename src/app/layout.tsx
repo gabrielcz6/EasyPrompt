@@ -22,11 +22,16 @@ export default async function RootLayout({
     children: React.ReactNode
 }) {
     // Fetch initial theme from DB if exists
-    // @ts-ignore
-    const themeSetting = await prisma.userSetting.findUnique({
-        where: { key: 'theme' }
-    });
-    const initialTheme = themeSetting?.value || 'light';
+    let initialTheme = 'light';
+    try {
+        // @ts-ignore
+        const themeSetting = await prisma.userSetting.findUnique({
+            where: { key: 'theme' }
+        });
+        initialTheme = themeSetting?.value || 'light';
+    } catch (error) {
+        console.warn('Could not fetch theme settings, defaulting to light mode.');
+    }
 
     return (
         <html lang="en" suppressHydrationWarning>
