@@ -30,9 +30,9 @@ export default function HomePage() {
                 </div>
                 <h1 className="text-5xl md:text-6xl font-extrabold text-foreground tracking-tight leading-tight">
                     {language === 'es' ? (
-                        <>Domina tus <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">Prompts</span> al máximo.</>
+                        <><span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">EasyPrompt</span>: Domina tus Prompts al máximo.</>
                     ) : (
-                        <>Master your <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">Prompts</span> to the max.</>
+                        <><span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">EasyPrompt</span>: Master your Prompts to the max.</>
                     )}
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
