@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { PanoramicResponseModal } from '../executions/PanoramicResponseModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AiConfigPanelProps {
     templateText: string;
@@ -19,6 +20,7 @@ interface AiConfigPanelProps {
 }
 
 export function AiConfigPanel({ templateText, variableValues, currentPromptId, onPromptLoaded }: AiConfigPanelProps) {
+    const { language, t } = useLanguage();
     const [model, setModel] = useState('gpt-5.2');
     const [temperature, setTemperature] = useState(0.7);
     const [useMaxTokens, setUseMaxTokens] = useState(false);
@@ -68,7 +70,7 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
         let targetPromptId = currentPromptId;
 
         if (!targetPromptId) {
-            toast.error("Error: No se encontró el ID del prompt.");
+            toast.error(language === 'es' ? "Error: No se encontró el ID del prompt." : "Error: Prompt ID not found.");
             setIsExecuting(false);
             return;
         }
@@ -90,9 +92,9 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
             const data = await res.json();
 
             if (res.ok) {
-                toast.success(`¡Ejecución exitosa! Se usaron ${data.execution.tokensTotal} tokens.`);
+                toast.success(language === 'es' ? `¡Ejecución exitosa! Se usaron ${data.execution.tokensTotal} tokens.` : `Execution successful! Used ${data.execution.tokensTotal} tokens.`);
                 if (data.hasChanged) {
-                    toast.info(`Se creó automáticamente una nueva versión (V${data.newVersionNumber}).`);
+                    toast.info(language === 'es' ? `Se creó automáticamente una nueva versión (V${data.newVersionNumber}).` : `A new version was automatically created (V${data.newVersionNumber}).`);
                 }
 
                 // Trigger reload of history
@@ -107,10 +109,10 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
                     latencyMs: data.execution.latencyMs
                 });
             } else {
-                toast.error(`Error en la ejecución: ${data.error}`);
+                toast.error(language === 'es' ? `Error en la ejecución: ${data.error}` : `Execution error: ${data.error}`);
             }
         } catch (e) {
-            toast.error("Error de red durante la ejecución.");
+            toast.error(language === 'es' ? "Error de red durante la ejecución." : "Network error during execution.");
         } finally {
             setIsExecuting(false);
             setShowVersionModal(false);
@@ -119,7 +121,7 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
 
     const handlePreExecuteCheck = async () => {
         if (!templateText) {
-            toast.warning("El prompt está vacío");
+            toast.warning(language === 'es' ? "El prompt está vacío" : "Prompt is empty");
             return;
         }
 
@@ -159,13 +161,13 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
     return (
         <div className="flex flex-col gap-6 p-5">
             <div className="flex flex-col gap-5">
-                <h2 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-1">Configuración de IA</h2>
+                <h2 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-1">{t.builder.config}</h2>
 
                 <div className="space-y-2">
-                    <Label className="text-muted-foreground font-semibold ml-1">Modelo</Label>
+                    <Label className="text-muted-foreground font-semibold ml-1">{language === 'es' ? 'Modelo' : 'Model'}</Label>
                     <Select value={model} onValueChange={setModel}>
                         <SelectTrigger className="w-full bg-muted border-border text-foreground focus:ring-violet-500 rounded-lg h-10 font-medium">
-                            <SelectValue placeholder="Seleccionar modelo" />
+                            <SelectValue placeholder={language === 'es' ? "Seleccionar modelo" : "Select model"} />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border text-foreground rounded-xl shadow-lg">
                             {models.map(m => (
@@ -179,7 +181,7 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
 
                 <div className="space-y-3">
                     <div className="flex justify-between items-center ml-1">
-                        <Label className="text-muted-foreground font-semibold">Temperatura</Label>
+                        <Label className="text-muted-foreground font-semibold">{language === 'es' ? 'Temperatura' : 'Temperature'}</Label>
                         <span className="text-xs font-bold text-violet-600 bg-violet-50 dark:bg-violet-900/20 px-2 py-0.5 rounded-md">{temperature.toFixed(1)}</span>
                     </div>
                     <Slider
@@ -194,7 +196,7 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
 
                 <div className="space-y-3 pb-3">
                     <div className="flex justify-between items-center ml-1">
-                        <Label className="text-muted-foreground font-semibold cursor-pointer" onClick={() => setUseMaxTokens(!useMaxTokens)}>Máxima Salida (Tokens)</Label>
+                        <Label className="text-muted-foreground font-semibold cursor-pointer" onClick={() => setUseMaxTokens(!useMaxTokens)}>{language === 'es' ? 'Máxima Salida (Tokens)' : 'Max Output (Tokens)'}</Label>
                         <Switch
                             checked={useMaxTokens}
                             onCheckedChange={setUseMaxTokens}
@@ -209,22 +211,22 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
                 disabled={isExecuting}
                 className="w-full mt-auto bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 rounded-xl h-12 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] text-[15px]"
             >
-                {isExecuting ? 'Ejecutando...' : 'Ejecutar Prompt'}
+                {isExecuting ? (language === 'es' ? 'Ejecutando...' : 'Executing...') : t.builder.execute}
             </Button>
 
             {/* Version Confirmation Modal */}
             <Dialog open={showVersionModal} onOpenChange={setShowVersionModal}>
                 <DialogContent className="bg-card border-border text-foreground rounded-2xl shadow-2xl p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold">Atención: Se creará una nueva versión</DialogTitle>
+                        <DialogTitle className="text-xl font-bold">{language === 'es' ? 'Atención: Se creará una nueva versión' : 'Warning: A new version will be created'}</DialogTitle>
                         <DialogDescription className="text-muted-foreground pt-3 leading-relaxed">
-                            Has modificado la plantilla del prompt o la configuración de IA. Ejecutar esto bloqueará los cambios creando automáticamente una nueva versión. ¿Deseas continuar?
+                            {language === 'es' ? 'Has modificado la plantilla del prompt o la configuración de IA. Ejecutar esto bloqueará los cambios creando automáticamente una nueva versión. ¿Deseas continuar?' : 'You have modified the prompt template or AI settings. Running this will lock the changes by automatically creating a new version. Do you want to proceed?'}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="pt-6 flex gap-3">
-                        <Button variant="outline" className="text-muted-foreground border-border hover:bg-muted hover:text-foreground rounded-lg h-11 px-5 font-semibold" onClick={() => setShowVersionModal(false)}>Cancelar</Button>
+                        <Button variant="outline" className="text-muted-foreground border-border hover:bg-muted hover:text-foreground rounded-lg h-11 px-5 font-semibold" onClick={() => setShowVersionModal(false)}>{t.common.cancel}</Button>
                         <Button className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-md shadow-violet-500/25 rounded-lg h-11 px-6 font-semibold" onClick={executePrompt} disabled={isExecuting}>
-                            {isExecuting ? 'Ejecutando...' : 'Confirmar y Ejecutar'}
+                            {isExecuting ? (language === 'es' ? 'Ejecutando...' : 'Executing...') : (language === 'es' ? 'Confirmar y Ejecutar' : 'Confirm and Execute')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -235,7 +237,7 @@ export function AiConfigPanel({ templateText, variableValues, currentPromptId, o
                 <PanoramicResponseModal
                     open={panoramicData.open}
                     onOpenChange={(open) => setPanoramicData(prev => prev ? { ...prev, open } : null)}
-                    title="Resultado de la Ejecución"
+                    title={language === 'es' ? "Resultado de la Ejecución" : "Execution Result"}
                     aiOutput={panoramicData.aiOutput}
                     renderedPrompt={panoramicData.renderedPrompt}
                     tokensTotal={panoramicData.tokensTotal}

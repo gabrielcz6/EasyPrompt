@@ -1,0 +1,18 @@
+Adiós al caos de los prompts en Word o blocs de notas... ¡Por fin armé lo que necesitaba! 🔥
+
+Les presento el "Prompt Manager & Testing Tool". Un patio de juegos para los que estamos metidos de cabeza en la IA y estamos cansados de perder versiones o de no saber qué prompt disparó qué respuesta.
+
+¿Qué tiene de especial?
+✅ Constructor Visual: Armas el prompt como si fuera un Lego con fragmentos reutilizables.
+✅ Catálogo de Variables: ¡No más copy-paste! Almacenas tus variables y el sistema las inyecta al vuelo.
+✅ Control de Versiones Real: Botón de "Pánico" para reciclar cualquier versión pasada que funcionó.
+✅ Comparador Panorámico: Compara 5 o 10 respuestas de la IA lado a lado para ver cuál es la ganadora.
+✅ Entregables Pro: ¿Tienes que presentarle el resultado a un cliente? Olvídate de capturas de pantalla feas. Exportas a Word (.docx) con estilo premium o mandas un link comprimido que se abre al instante.
+
+Nada de "IA esta, IA lo otro", esta es una herramienta de ingeniería pensada para que los equipos creativos dejen de perder el tiempo en lo operativo y se enfoquen en la magia. 🚀
+
+Hecho con Next.js 14, Prisma, lz-string y docx.js. 
+
+¿Cómo gestionan ustedes sus prompts? Los leo en los comentarios. 👇
+
+#PromptEngineering #AI #Productivity #NextJS #OpenAI #BuildInPublic

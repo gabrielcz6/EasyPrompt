@@ -2,8 +2,10 @@
 
 import { useState, useEffect, use } from 'react';
 import { BuilderLayout } from '@/components/builder/BuilderLayout';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PromptEditorPage({ params }: { params: Promise<{ id: string }> }) {
+    const { language } = useLanguage();
     const { id } = use(params);
     const [activeTab, setActiveTab] = useState<'editor' | 'variables'>('editor');
     const [prompt, setPrompt] = useState<any>(null);
@@ -15,7 +17,7 @@ export default function PromptEditorPage({ params }: { params: Promise<{ id: str
             .then(data => setPrompt(data));
     }, [id]);
 
-    if (!prompt) return <div className="p-8 text-stone-500">Cargando prompt...</div>;
+    if (!prompt) return <div className="p-8 text-stone-500">{language === 'es' ? 'Cargando prompt...' : 'Loading prompt...'}</div>;
 
     return (
         <div className="flex flex-col h-full bg-background">

@@ -3,35 +3,37 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Database, LayoutTemplate, Home, PlayCircle } from 'lucide-react';
+import { Database, LayoutTemplate, Home, PlayCircle, Globe } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function TopNav() {
     const pathname = usePathname();
+    const { language, setLanguage, t } = useLanguage();
 
     const routes = [
         {
             href: '/home',
-            label: 'Home',
+            label: t.nav.home,
             icon: <Home className="w-4 h-4 mr-2" />,
             active: pathname === '/home' || pathname === '/',
         },
         {
             href: '/prompts',
-            label: 'Prompts',
+            label: t.nav.prompts,
             icon: <LayoutTemplate className="w-4 h-4 mr-2" />,
             active: pathname.startsWith('/prompts'),
         },
         {
             href: '/variables',
-            label: 'Variables',
+            label: t.nav.variables,
             icon: <Database className="w-4 h-4 mr-2" />,
             active: pathname.startsWith('/variables'),
         },
         {
             href: '/tutorial',
-            label: 'Tutorial',
+            label: t.nav.tutorial,
             icon: <PlayCircle className="w-4 h-4 mr-2" />,
             active: pathname.startsWith('/tutorial'),
         },
@@ -61,7 +63,19 @@ export function TopNav() {
                         ))}
                     </nav>
                 </div>
-                <ThemeToggle />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+                        className="h-9 px-3 gap-2 text-xs font-bold uppercase tracking-widest hover:bg-violet-50 dark:hover:bg-violet-900/20 text-muted-foreground hover:text-violet-600 transition-all rounded-xl border border-transparent hover:border-violet-100 dark:hover:border-violet-800"
+                    >
+                        <Globe size={14} className="text-violet-500" />
+                        {language === 'es' ? 'ESP' : 'ENG'}
+                    </Button>
+                    <div className="w-px h-6 bg-border mx-1"></div>
+                    <ThemeToggle />
+                </div>
             </div>
         </div>
     );

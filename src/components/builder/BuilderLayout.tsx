@@ -15,6 +15,7 @@ import { PromptEditor } from './PromptEditor';
 import { VariablesPanel } from './VariablesPanel';
 import { AiConfigPanel } from './AiConfigPanel';
 import { ExecutionHistory } from '../executions/ExecutionHistory';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface BuilderLayoutProps {
     promptId: string;
@@ -22,6 +23,7 @@ interface BuilderLayoutProps {
 }
 
 export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
+    const { language, t } = useLanguage();
     const [promptData, setPromptData] = useState(initialPrompt);
 
     useEffect(() => {
@@ -176,7 +178,9 @@ export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                 <div className="bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md animate-in zoom-in duration-200">
                     <h3 className="text-lg font-bold mb-4">
-                        {pendingDragData.isList ? `Seleccionar opción para "${pendingDragData.label}"` : `Insertar "${pendingDragData.label}"`}
+                        {pendingDragData.isList
+                            ? (language === 'es' ? `Seleccionar opción para "${pendingDragData.label}"` : `Select option for "${pendingDragData.label}"`)
+                            : (language === 'es' ? `Insertar "${pendingDragData.label}"` : `Insert "${pendingDragData.label}"`)}
                     </h3>
                     <div className="grid grid-cols-1 gap-3 mb-6">
                         {options.map((opt: string) => (
@@ -186,7 +190,9 @@ export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
                                 className="p-4 text-left border-2 border-border rounded-xl hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all flex flex-col gap-1 group"
                             >
                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-violet-500">
-                                    {pendingDragData.isList ? 'Opción' : 'Variable Fija'}
+                                    {pendingDragData.isList
+                                        ? (language === 'es' ? 'Opción' : 'Option')
+                                        : (language === 'es' ? 'Variable Fija' : 'Fixed Variable')}
                                 </span>
                                 <span className="text-sm font-bold truncate">
                                     {opt}
@@ -198,7 +204,7 @@ export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
                         onClick={() => setPendingDragData(null)}
                         className="w-full py-2 text-sm text-muted-foreground hover:text-foreground font-medium"
                     >
-                        Cancelar
+                        {t.common.cancel}
                     </button>
                 </div>
             </div>
@@ -224,7 +230,7 @@ export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
                 {/* Center: Editor & Executions */}
                 <div className="flex-1 flex flex-col min-w-0 bg-background">
                     <div className="px-6 py-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-                        <h1 className="text-xl font-bold text-foreground tracking-tight">Editor de Prompt</h1>
+                        <h1 className="text-xl font-bold text-foreground tracking-tight">{language === 'es' ? 'Editor de Prompt' : 'Prompt Editor'}</h1>
                     </div>
 
                     <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-6">
@@ -264,7 +270,9 @@ export function BuilderLayout({ promptId, initialPrompt }: BuilderLayoutProps) {
                                 {activeDragData.isList && activeDragData.selectedOption ? activeDragData.selectedOption : activeDragData.label}
                             </div>
                             <div className="text-[10px] text-violet-400 mt-1 uppercase tracking-widest font-bold">
-                                {activeDragData.isList ? 'Opción Seleccionada' : 'Variable'}
+                                {activeDragData.isList
+                                    ? (language === 'es' ? 'Opción Seleccionada' : 'Selected Option')
+                                    : (language === 'es' ? 'Variable' : 'Variable')}
                             </div>
                         </div>
                     ) : null}

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface FragmentSidebarProps {
     promptId: string;
@@ -25,6 +26,7 @@ interface FragmentSidebarProps {
 }
 
 function DraggableFragment({ fragment }: { fragment: Fragment }) {
+    const { language } = useLanguage();
     const content = fragment.content.trim();
     const isList = content.startsWith('(') && content.endsWith(')') && content.includes('|');
     const options = isList ? content.slice(1, -1).split('|').map(s => s.trim()) : [];
@@ -44,7 +46,7 @@ function DraggableFragment({ fragment }: { fragment: Fragment }) {
     return (
         <Card className={`p-3 mb-3 bg-card border-border shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-300 ${isDragging ? 'opacity-50' : ''}`}>
             <div className="flex items-start gap-3">
-                <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing hover:bg-muted p-1.5 rounded-md mt-0.5" title="Arrastrar al editor">
+                <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing hover:bg-muted p-1.5 rounded-md mt-0.5" title={language === 'es' ? "Arrastrar al editor" : "Drag to editor"}>
                     <GripVertical size={16} className="text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -55,7 +57,7 @@ function DraggableFragment({ fragment }: { fragment: Fragment }) {
                         <div onClick={e => e.stopPropagation()} className="pointer-events-auto mt-2">
                             <Select value={selectedOption} onValueChange={setSelectedOption}>
                                 <SelectTrigger className="h-8 text-[11px] bg-muted/50 border-border focus:ring-violet-500 w-full truncate font-medium text-foreground rounded-md">
-                                    <SelectValue placeholder="Elegir opción..." />
+                                    <SelectValue placeholder={language === 'es' ? "Elegir opción..." : "Choose option..."} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card border-border z-[100] shadow-xl text-foreground">
                                     {options.map(opt => (
@@ -69,7 +71,7 @@ function DraggableFragment({ fragment }: { fragment: Fragment }) {
                     ) : (
                         <div className="mt-2">
                             <div className="h-8 flex items-center px-2.5 bg-muted/30 border border-border/50 rounded-md text-[11px] text-muted-foreground/70 font-medium truncate italic italic-none">
-                                {fragment.content.length > 30 ? fragment.content.substring(0, 30) + '...' : fragment.content || 'Sin contenido'}
+                                {fragment.content.length > 30 ? fragment.content.substring(0, 30) + '...' : fragment.content || (language === 'es' ? 'Sin contenido' : 'No content')}
                             </div>
                         </div>
                     )}
@@ -80,6 +82,7 @@ function DraggableFragment({ fragment }: { fragment: Fragment }) {
 }
 
 export function FragmentSidebar({ promptId, fragments, onRefreshData }: FragmentSidebarProps) {
+    const { language, t } = useLanguage();
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [allGlobalFragments, setAllGlobalFragments] = useState<Fragment[]>([]);
     const [selectedFragmentIds, setSelectedFragmentIds] = useState<Set<string>>(new Set());
@@ -129,11 +132,11 @@ export function FragmentSidebar({ promptId, fragments, onRefreshData }: Fragment
             if (res.ok) {
                 if (onRefreshData) onRefreshData();
             } else {
-                toast.error('Error al actualizar variables');
+                toast.error(language === 'es' ? 'Error al actualizar variables' : 'Error updating variables');
                 // Revert state on error if needed, but usually better to let user try again
             }
         } catch (error) {
-            toast.error('Error de red');
+            toast.error(language === 'es' ? 'Error de red' : 'Network error');
         } finally {
             setIsSaving(false);
         }
@@ -165,7 +168,7 @@ export function FragmentSidebar({ promptId, fragments, onRefreshData }: Fragment
     return (
         <div className="flex flex-col h-full bg-transparent">
             <div className="p-4 border-b border-border bg-card/50 flex items-center justify-between">
-                <h2 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Variables Disponibles</h2>
+                <h2 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">{language === 'es' ? 'Variables Disponibles' : 'Available Variables'}</h2>
                 <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
                     <DialogTrigger asChild>
                         <Button
@@ -174,7 +177,7 @@ export function FragmentSidebar({ promptId, fragments, onRefreshData }: Fragment
                             className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-violet-600 hover:text-violet-700 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-900/20 gap-1.5"
                         >
                             <PlusCircle size={14} />
-                            Importar
+                            {language === 'es' ? 'Importar' : 'Import'}
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl h-[85vh] flex flex-col p-0 overflow-hidden bg-card border-border shadow-2xl rounded-2xl">
@@ -182,23 +185,23 @@ export function FragmentSidebar({ promptId, fragments, onRefreshData }: Fragment
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <DialogTitle className="text-xl font-bold text-foreground">Mis Variables</DialogTitle>
+                                        <DialogTitle className="text-xl font-bold text-foreground">{language === 'es' ? 'Mis Variables' : 'My Variables'}</DialogTitle>
                                         {isSaving && (
                                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-violet-500 uppercase tracking-tighter animate-pulse">
                                                 <div className="w-2 h-2 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-                                                Guardando...
+                                                {language === 'es' ? 'Guardando...' : 'Saving...'}
                                             </div>
                                         )}
                                     </div>
                                     <DialogDescription className="text-muted-foreground mt-1">
-                                        Selecciona qué variables globales quieres usar en este prompt. Se guardan automáticamente.
+                                        {language === 'es' ? 'Selecciona qué variables globales quieres usar en este prompt. Se guardan automáticamente.' : 'Select which global variables you want to use in this prompt. They are saved automatically.'}
                                     </DialogDescription>
                                 </div>
                             </div>
                             <div className="relative mt-4">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Buscar por nombre o categoría..."
+                                    placeholder={language === 'es' ? "Buscar por nombre o categoría..." : "Search by name or category..."}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-10 bg-background border-border placeholder:text-muted-foreground/50"
@@ -228,12 +231,12 @@ export function FragmentSidebar({ promptId, fragments, onRefreshData }: Fragment
                             {isLoadingFragments ? (
                                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                                     <div className="w-10 h-10 border-3 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-                                    <p className="text-sm font-medium text-muted-foreground">Cargando catálogo...</p>
+                                    <p className="text-sm font-medium text-muted-foreground">{language === 'es' ? 'Cargando catálogo...' : 'Loading catalog...'}</p>
                                 </div>
                             ) : Object.keys(groupedGlobal).length === 0 ? (
                                 <div className="text-center py-16 bg-muted/20 rounded-xl border border-dashed border-border mx-4">
                                     <div className="text-5xl mb-4 grayscale opacity-20">🔍</div>
-                                    <p className="text-muted-foreground font-medium">No se encontraron variables.</p>
+                                    <p className="text-muted-foreground font-medium">{language === 'es' ? 'No se encontraron variables.' : 'No variables found.'}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-10 pb-4">
@@ -284,7 +287,7 @@ export function FragmentSidebar({ promptId, fragments, onRefreshData }: Fragment
                                 onClick={handleSaveImports}
                                 className="bg-gradient-to-r from-violet-600 via-indigo-600 to-fuchsia-600 hover:opacity-90 text-white shadow-xl shadow-violet-500/30 px-10 py-6 rounded-xl font-bold text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
-                                Listo
+                                {language === 'es' ? 'Listo' : 'Done'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -293,7 +296,7 @@ export function FragmentSidebar({ promptId, fragments, onRefreshData }: Fragment
             <ScrollArea className="flex-1 p-4 text-foreground">
                 {Object.keys(groupedCurrent).length === 0 ? (
                     <div className="text-sm text-muted-foreground text-center mt-4 text-balance bg-muted p-4 rounded-xl border border-border">
-                        No has importado variables a este prompt. Usa el botón "Importar" para seleccionar algunas.
+                        {language === 'es' ? 'No has importado variables a este prompt. Usa el botón "Importar" para seleccionar algunas.' : 'You haven\'t imported variables to this prompt. Use the "Import" button to select some.'}
                     </div>
                 ) : (
                     Object.entries(groupedCurrent).map(([category, items]) => (

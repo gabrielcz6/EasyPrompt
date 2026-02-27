@@ -5,8 +5,10 @@ import { Fragment } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function PromptVariablesTab({ promptId }: { promptId: string }) {
+    const { language, t } = useLanguage();
     const [allVariables, setAllVariables] = useState<Fragment[]>([]);
     const [importedIds, setImportedIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ export function PromptVariablesTab({ promptId }: { promptId: string }) {
             }
             setLoading(false);
         }).catch(() => {
-            toast.error('Error al cargar datos');
+            toast.error(language === 'es' ? 'Error al cargar datos' : 'Error loading data');
             setLoading(false);
         });
     }, [promptId]);
@@ -46,18 +48,18 @@ export function PromptVariablesTab({ promptId }: { promptId: string }) {
                 body: JSON.stringify({ fragmentIds: Array.from(importedIds) }),
             });
             if (res.ok) {
-                toast.success('Variables del prompt guardadas');
+                toast.success(language === 'es' ? 'Variables del prompt guardadas' : 'Prompt variables saved');
             } else {
-                toast.error('Error al guardar variables');
+                toast.error(language === 'es' ? 'Error al guardar variables' : 'Error saving variables');
             }
         } catch {
-            toast.error('Error de red');
+            toast.error(language === 'es' ? 'Error de red' : 'Network error');
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <div className="p-8">Cargando variables...</div>;
+    if (loading) return <div className="p-8">{language === 'es' ? 'Cargando variables...' : 'Loading variables...'}</div>;
 
     // Group variables by category
     const grouped = allVariables.reduce((acc, variable) => {
@@ -70,21 +72,27 @@ export function PromptVariablesTab({ promptId }: { promptId: string }) {
         <div className="flex-1 overflow-y-auto p-10 max-w-6xl mx-auto w-full bg-[#F9F8F6] text-stone-800">
             <div className="flex items-center justify-between mb-10">
                 <div>
-                    <h2 className="text-4xl font-extrabold text-stone-800 tracking-tight">Importar Variables</h2>
-                    <p className="text-stone-500 text-base mt-2">Selecciona qué variables globales quieres tener disponibles en el panel lateral del editor para este prompt.</p>
+                    <h2 className="text-4xl font-extrabold text-stone-800 tracking-tight">{language === 'es' ? 'Importar Variables' : 'Import Variables'}</h2>
+                    <p className="text-stone-500 text-base mt-2">
+                        {language === 'es'
+                            ? 'Selecciona qué variables globales quieres tener disponibles en el panel lateral del editor para este prompt.'
+                            : 'Select which global variables you want to have available in the editor\'s sidebar for this prompt.'}
+                    </p>
                 </div>
                 <Button
                     onClick={handleSave}
                     disabled={saving}
                     className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 rounded-lg px-6 h-11 font-medium transition-all hover:scale-105"
                 >
-                    {saving ? 'Guardando...' : 'Guardar Selección'}
+                    {saving ? (language === 'es' ? 'Guardando...' : 'Saving...') : (language === 'es' ? 'Guardar Selección' : 'Save Selection')}
                 </Button>
             </div>
 
             {Object.keys(grouped).length === 0 ? (
                 <div className="text-stone-500 bg-[#FCFCFA] border border-stone-200/50 p-12 text-center rounded-2xl shadow-sm text-lg">
-                    No hay variables globales configuradas. Ve a la pestaña de Variables para crear algunas.
+                    {language === 'es'
+                        ? 'No hay variables globales configuradas. Ve a la pestaña de Variables para crear algunas.'
+                        : 'No global variables configured. Go to the Variables tab to create some.'}
                 </div>
             ) : (
                 <div className="space-y-10">

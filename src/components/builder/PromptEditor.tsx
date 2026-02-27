@@ -3,6 +3,7 @@
 import React, { ChangeEvent } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import Editor from 'react-simple-code-editor';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PromptEditorProps {
     value: string;
@@ -10,6 +11,7 @@ interface PromptEditorProps {
 }
 
 export function PromptEditor({ value, onChange }: PromptEditorProps) {
+    const { t } = useLanguage();
     const { isOver, setNodeRef } = useDroppable({
         id: 'editor-drop-zone',
     });
@@ -60,7 +62,7 @@ export function PromptEditor({ value, onChange }: PromptEditorProps) {
                     }}
                     textareaClassName="editor-textarea focus:outline-none placeholder:text-muted-foreground caret-violet-500 !font-mono !leading-[24px] !m-0 !shadow-none !border-none"
                     preClassName="editor-pre pointer-events-none !font-mono !leading-[24px] !m-0"
-                    placeholder="Escribe tu prompt aquí... Usa {{variable}} para insertar datos."
+                    placeholder={t.builder.placeholders.user}
                 />
                 <style jsx global>{`
                     .editor-textarea {

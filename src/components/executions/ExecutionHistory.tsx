@@ -5,18 +5,22 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Maximize2 } from 'lucide-react';
+import { RefreshCw, Maximize2, Trash2 } from 'lucide-react';
 import { Execution, PromptVersion } from '@prisma/client';
 import { PanoramicResponseModal } from './PanoramicResponseModal';
+import { PanoramicMultiResponseModal } from './PanoramicMultiResponseModal';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
 type FullVersion = PromptVersion & { executions: Execution[] };
 
 export function ExecutionHistory({ promptId }: { promptId: string }) {
+    const { language, t } = useLanguage();
     const [versions, setVersions] = useState<FullVersion[]>([]);
 
     // Panoramic Modal State
     const [panoramicData, setPanoramicData] = useState<{ open: boolean, exec: Execution & { renderedMap?: any } | null }>({ open: false, exec: null });
+    const [multiPanoramicData, setMultiPanoramicData] = useState<{ open: boolean, group: any | null }>({ open: false, group: null });
 
     const renderPromptWithVariables = (templateText: string, variablesUsed: any) => {
         if (!templateText) return null;
@@ -43,6 +47,26 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
         });
     };
 
+    const handleDelete = async (executionIds: string[]) => {
+        try {
+            const res = await fetch('/api/executions/delete-bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ executionIds }),
+            });
+            if (res.ok) {
+                toast.success(executionIds.length === 1 ? t.history.confirmDelete : t.history.responses + ' ' + (language === 'es' ? 'eliminadas' : 'deleted'));
+                fetchHistory();
+                // If we deleted a group, might be better to clear selection if we had one
+            } else {
+                toast.error(language === 'es' ? 'Error al eliminar' : 'Error deleting');
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error(language === 'es' ? 'Error al eliminar' : 'Error deleting');
+        }
+    };
+
     const fetchHistory = async () => {
         try {
             const res = await fetch(`/api/prompts/${promptId}/history`);
@@ -63,20 +87,21 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
     }, [promptId]);
 
     if (versions.length === 0) {
-        return <div className="text-muted-foreground text-sm">Aún no hay ejecuciones para este prompt.</div>;
+        return <div className="text-muted-foreground text-sm">{t.history.empty}</div>;
     }
 
     return (
         <div className="flex flex-col gap-6">
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Historial de Ejecuciones</h3>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t.history.title}</h3>
             <div className="flex flex-col gap-8">
                 {(() => {
                     // Flatten all executions from all versions and group globally
-                    type ExecutionWithVersion = Execution & { versionNumber: number; templateText: string };
+                    type ExecutionWithVersion = Execution & { versionNumber: number; templateText: string; modelConfig: any };
                     type ExecutionGroup = {
                         renderedPrompt: string;
                         variablesUsed: any;
                         templateText: string;
+                        modelConfig: any;
                         variations: ExecutionWithVersion[];
                         lastTimestamp: Date;
                     };
@@ -87,13 +112,14 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                             allExecutions.push({
                                 ...exec,
                                 versionNumber: ver.versionNumber,
-                                templateText: ver.templateText
+                                templateText: ver.templateText,
+                                modelConfig: ver.modelConfig
                             });
                         });
                     });
 
                     if (allExecutions.length === 0) {
-                        return <div className="text-muted-foreground text-sm italic bg-muted p-8 rounded-2xl border border-border text-center">Aún no hay ejecuciones registradas.</div>;
+                        return <div className="text-muted-foreground text-sm italic bg-muted p-8 rounded-2xl border border-border text-center">{t.history.empty}</div>;
                     }
 
                     const groups: ExecutionGroup[] = [];
@@ -101,7 +127,10 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
 
                     // Sort all executions by date (newest first)
                     allExecutions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).forEach((exec) => {
-                        const key = exec.renderedPrompt;
+                        const modelStr = exec.modelConfig?.model || 'unknown';
+                        const tempStr = exec.modelConfig?.temperature ?? 'unknown';
+                        const key = `${exec.renderedPrompt}|${modelStr}|${tempStr}`;
+
                         if (keyMap.has(key)) {
                             groups[keyMap.get(key)!].variations.push(exec);
                         } else {
@@ -110,6 +139,7 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                                 renderedPrompt: exec.renderedPrompt,
                                 variablesUsed: exec.variablesUsed,
                                 templateText: exec.templateText,
+                                modelConfig: exec.modelConfig,
                                 variations: [exec],
                                 lastTimestamp: new Date(exec.createdAt)
                             });
@@ -119,38 +149,75 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                     return (
                         <Accordion type="single" collapsible className="w-full space-y-5">
                             {groups.map((group, gIdx) => (
-                                <AccordionItem key={gIdx} value={`group-${gIdx}`} className="bg-card border border-border hover:border-violet-300 shadow-sm rounded-2xl overflow-hidden px-1 transition-all">
-                                    <AccordionTrigger className="hover:no-underline p-5 py-4 group">
-                                        <div className="flex w-full items-center justify-between pr-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex flex-col items-start translate-y-[1px]">
-                                                    <h4 className="text-sm font-extrabold text-foreground group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors uppercase tracking-tight">
-                                                        Input de Prompt #{groups.length - gIdx}
-                                                    </h4>
-                                                    <span className="text-[10px] text-muted-foreground font-medium">{group.variations.length} {group.variations.length === 1 ? 'resultado' : 'resultados / variaciones'}</span>
-                                                </div>
-                                                {group.variations.length > 1 && (
-                                                    <span className="text-[10px] font-black text-white bg-violet-600 px-2.5 py-1 rounded-full animate-in zoom-in duration-300 shadow-sm">
-                                                        {group.variations.length} VARIACIONES
-                                                    </span>
-                                                )}
-                                            </div>
+                                <AccordionItem key={gIdx} value={`group-${gIdx}`} className="bg-card border border-border hover:border-violet-300 shadow-sm rounded-2xl overflow-hidden transition-all">
+                                    <div className="relative flex items-center group/item">
+                                        <AccordionTrigger className="hover:no-underline p-5 py-4 group/trigger flex-1">
+                                            <div className="flex w-full items-center justify-between pr-14">
+                                                <div className="flex items-center gap-6">
+                                                    {/* Version & Basic Info */}
+                                                    <div className="flex flex-col items-start min-w-[120px]">
+                                                        <h4 className="text-sm font-black text-foreground group-hover/trigger:text-violet-600 dark:group-hover/trigger:text-violet-400 transition-colors uppercase tracking-tighter">
+                                                            {t.history.version} {group.variations[0].versionNumber}
+                                                        </h4>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-[9px] font-bold bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded border border-violet-200 dark:border-violet-800">
+                                                                {group.modelConfig?.model || (language === 'es' ? 'Desconocido' : 'Unknown')}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                                                                T: {group.modelConfig?.temperature ?? '-'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
 
-                                            {/* Preview Variables */}
-                                            {group.variablesUsed && typeof group.variablesUsed === 'object' && Object.keys(group.variablesUsed).length > 0 && (
-                                                <div className="hidden md:flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                                    {Object.entries(group.variablesUsed as Record<string, string>).slice(0, 3).map(([k, v]) => (
-                                                        <span key={k} className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded border border-border font-bold">
-                                                            {k}: <span className="text-foreground">{v || '—'}</span>
+                                                    {/* Separator Line */}
+                                                    <div className="hidden lg:block h-8 w-px bg-border/60"></div>
+
+                                                    {/* Responses Count Badge */}
+                                                    <div className="flex flex-col items-center gap-0.5 shrink-0">
+                                                        <span className="text-[10px] font-black text-white bg-violet-600 px-3 py-1 rounded-lg shadow-sm">
+                                                            {group.variations.length} {group.variations.length === 1 ? t.common.responses.slice(0, -1).toUpperCase() : t.common.responses.toUpperCase()}
                                                         </span>
-                                                    ))}
-                                                    {Object.keys(group.variablesUsed).length > 3 && (
-                                                        <span className="text-[10px] text-stone-400 font-bold">+{Object.keys(group.variablesUsed).length - 3}</span>
+                                                        <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-0 group-hover/trigger:opacity-100 transition-opacity">{t.history.viewDetails}</span>
+                                                    </div>
+
+                                                    {/* Preview Variables - Beautiful Tags */}
+                                                    {group.variablesUsed && typeof group.variablesUsed === 'object' && Object.keys(group.variablesUsed).length > 0 && (
+                                                        <div className="hidden md:flex items-center gap-2 flex-wrap max-w-[400px]">
+                                                            {Object.entries(group.variablesUsed as Record<string, string>).slice(0, 3).map(([k, v]) => (
+                                                                <div key={k} className="flex flex-col bg-muted/40 border border-border/60 rounded-lg px-2.5 py-1 min-w-[80px] hover:bg-muted/80 transition-colors">
+                                                                    <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest leading-none mb-1">{k}</span>
+                                                                    <span className="text-[10px] text-foreground font-bold truncate max-w-[100px] leading-tight">{v || '—'}</span>
+                                                                </div>
+                                                            ))}
+                                                            {Object.keys(group.variablesUsed).length > 3 && (
+                                                                <div className="h-8 w-8 rounded-lg border border-dashed border-border flex items-center justify-center bg-muted/20">
+                                                                    <span className="text-[10px] text-muted-foreground font-black">+{Object.keys(group.variablesUsed).length - 3}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
-                                            )}
+                                            </div>
+                                        </AccordionTrigger>
+
+                                        {/* Action button with proper spacing */}
+                                        <div className="absolute right-4 flex items-center">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-9 w-9 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all rounded-xl z-10 border border-transparent hover:border-red-100 dark:hover:border-red-900/50"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    if (confirm(t.history.deleteGroup.replace('{n}', group.variations.length.toString()))) {
+                                                        handleDelete(group.variations.map(v => v.id));
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
                                         </div>
-                                    </AccordionTrigger>
+                                    </div>
 
                                     <AccordionContent className="p-6 pt-2 bg-muted/20 border-t border-border">
                                         <div className="flex flex-col gap-8">
@@ -158,7 +225,7 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                                             <div className="flex flex-col gap-3">
                                                 <div className="flex items-center justify-between pl-1">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Prompt Enviado (Inyectado)</span>
+                                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{t.history.sentPrompt}</span>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
@@ -167,15 +234,16 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                                                                 window.dispatchEvent(new CustomEvent('reuse-version', {
                                                                     detail: {
                                                                         templateText: group.templateText,
+                                                                        modelConfig: group.modelConfig,
                                                                         executions: [{ variablesUsed: group.variablesUsed }]
                                                                     }
                                                                 }));
-                                                                toast.success("Prompt y variables restaurados en el editor");
+                                                                toast.success(t.history.reused);
                                                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                                                             }}
                                                         >
                                                             <RefreshCw size={12} className="group-hover/recycle:rotate-180 transition-transform duration-500" />
-                                                            Reciclar Prompt
+                                                            {t.history.reusePrompt}
                                                         </Button>
                                                     </div>
                                                     <div className="h-px bg-border flex-1 ml-4"></div>
@@ -191,9 +259,24 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
 
                                             {/* Variations List */}
                                             <div className="flex flex-col gap-5">
-                                                <div className="flex items-center gap-2 pl-1">
-                                                    <span className="text-[10px] font-black text-violet-600 uppercase tracking-[0.2em]">Resultados por Versión</span>
+                                                <div className="flex items-center gap-3 pl-1 w-full">
+                                                    <span className="text-[10px] font-black text-violet-600 uppercase tracking-[0.2em] shrink-0">{language === 'es' ? 'Respuestas Generadas' : 'Generated Responses'}</span>
                                                     <div className="h-px bg-violet-100 dark:bg-violet-900/30 flex-1"></div>
+                                                    {group.variations.length > 1 && (
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            className="h-7 gap-1.5 text-[10px] font-bold uppercase tracking-tight shadow-sm bg-violet-600 hover:bg-violet-700 text-white shrink-0"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                setMultiPanoramicData({ open: true, group });
+                                                            }}
+                                                        >
+                                                            <Maximize2 size={12} />
+                                                            {t.history.comparison}
+                                                        </Button>
+                                                    )}
                                                 </div>
 
                                                 <div className="space-y-4 pb-4">
@@ -204,18 +287,34 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                                                                     <span className="bg-violet-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">V{v.versionNumber}</span>
                                                                     <span className="text-[10px] font-bold text-muted-foreground italic">{new Date(v.createdAt).toLocaleString()}</span>
                                                                     <span className="text-[10px] font-semibold text-violet-500 bg-violet-50 dark:bg-violet-900/20 px-2 py-0.5 rounded border border-violet-100 dark:border-violet-800">
-                                                                        {v.tokensTotal} tkns • {v.latencyMs}ms
+                                                                        {v.tokensTotal} {t.history.tokens} • {v.latencyMs}{t.history.latency}
                                                                     </span>
                                                                 </div>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-7 gap-2 text-violet-500 hover:text-violet-700 hover:bg-violet-50 rounded-lg px-2 text-[10px] font-bold uppercase tracking-tight"
-                                                                    onClick={() => setPanoramicData({ open: true, exec: v })}
-                                                                >
-                                                                    <Maximize2 size={12} />
-                                                                    Vista Panorámica
-                                                                </Button>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-7 gap-2 text-violet-500 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-lg px-2 text-[10px] font-bold uppercase tracking-tight"
+                                                                        onClick={() => setPanoramicData({ open: true, exec: v })}
+                                                                    >
+                                                                        <Maximize2 size={12} />
+                                                                        {language === 'es' ? 'Vista Panorámica' : 'Panoramic View'}
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            if (confirm(t.history.confirmDelete)) {
+                                                                                handleDelete([v.id]);
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <Trash2 size={12} />
+                                                                    </Button>
+                                                                </div>
                                                             </div>
                                                             <ScrollArea className="w-full h-[250px] bg-gradient-to-br from-transparent to-muted/10">
                                                                 <div className="p-5 text-[15px] text-foreground whitespace-pre-wrap leading-relaxed">
@@ -240,11 +339,22 @@ export function ExecutionHistory({ promptId }: { promptId: string }) {
                 <PanoramicResponseModal
                     open={panoramicData.open}
                     onOpenChange={(open) => setPanoramicData(prev => ({ ...prev, open }))}
-                    title="Resultado Histórico"
+                    title={language === 'es' ? "Resultado Histórico" : "Historical Result"}
                     aiOutput={panoramicData.exec.aiOutput}
                     renderedPrompt={panoramicData.exec.renderedPrompt}
                     tokensTotal={panoramicData.exec.tokensTotal}
                     latencyMs={panoramicData.exec.latencyMs}
+                />
+            )}
+
+            {/* Panoramic Multi-Response Modal */}
+            {multiPanoramicData.group && (
+                <PanoramicMultiResponseModal
+                    open={multiPanoramicData.open}
+                    onOpenChange={(open) => setMultiPanoramicData(prev => ({ ...prev, open }))}
+                    renderedPrompt={multiPanoramicData.group.renderedPrompt}
+                    modelConfig={multiPanoramicData.group.modelConfig}
+                    variations={multiPanoramicData.group.variations}
                 />
             )}
         </div>

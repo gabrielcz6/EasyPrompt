@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Trash2, Edit2, X, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from '@/context/LanguageContext';
 import {
     Dialog,
     DialogContent,
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function VariablesPage() {
+    const { t } = useLanguage();
     const [variables, setVariables] = useState<Fragment[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,7 @@ export default function VariablesPage() {
                 setVariables(data);
             }
         } catch (error) {
-            toast.error('Error al cargar las variables');
+            toast.error(t.catalog.errorLoad);
         } finally {
             setLoading(false);
         }
@@ -67,14 +69,14 @@ export default function VariablesPage() {
             });
 
             if (res.ok) {
-                toast.success(editingId ? 'Variable actualizada exitosamente' : 'Variable creada exitosamente');
+                toast.success(editingId ? t.catalog.successUpdate : t.catalog.successCreate);
                 resetForm();
                 loadVariables();
             } else {
-                toast.error(editingId ? 'Error al actualizar la variable' : 'Error al crear la variable');
+                toast.error(editingId ? t.catalog.errorUpdate : t.catalog.errorCreate);
             }
         } catch {
-            toast.error('Error de conexión');
+            toast.error(t.catalog.errorConnection);
         }
     };
 
@@ -83,16 +85,16 @@ export default function VariablesPage() {
         try {
             const res = await fetch(`/api/fragments/${variableToDelete}`, { method: 'DELETE' });
             if (res.ok) {
-                toast.success('Variable eliminada correctamente');
+                toast.success(t.catalog.successDelete);
                 setVariables(variables.filter(v => v.id !== variableToDelete));
                 if (editingId === variableToDelete) {
                     resetForm();
                 }
             } else {
-                toast.error('Error al eliminar la variable');
+                toast.error(t.catalog.errorDelete);
             }
         } catch (error) {
-            toast.error('Error de conexión');
+            toast.error(t.catalog.errorConnection);
         } finally {
             setVariableToDelete(null);
         }
@@ -123,7 +125,7 @@ export default function VariablesPage() {
     const addOption = () => {
         if (!newOption.trim()) return;
         if (options.includes(newOption.trim())) {
-            toast.warning('Esta opción ya existe');
+            toast.warning(t.catalog.warningOptionExists);
             return;
         }
         setOptions([...options, newOption.trim()]);
@@ -136,7 +138,7 @@ export default function VariablesPage() {
 
     return (
         <div className="flex-1 p-8 max-w-6xl mx-auto w-full">
-            <h1 className="text-4xl font-extrabold mb-10 text-foreground tracking-tight">Gestión de Variables Globales</h1>
+            <h1 className="text-4xl font-extrabold mb-10 text-foreground tracking-tight">{t.catalog.title}</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <Card className="p-8 md:col-span-1 bg-card border-border h-fit rounded-2xl shadow-sm hover:shadow-md transition-shadow relative text-foreground">
@@ -151,11 +153,11 @@ export default function VariablesPage() {
                         </Button>
                     )}
                     <h2 className="text-xl font-bold mb-6 text-foreground">
-                        {editingId ? 'Editar Variable' : 'Crear Nueva Variable'}
+                        {editingId ? t.catalog.edit : t.catalog.createNew}
                     </h2>
                     <form onSubmit={handleSave} className="space-y-6">
                         <div>
-                            <label className="text-sm font-semibold text-muted-foreground mb-2 block">Nombre (Ej: países)</label>
+                            <label className="text-sm font-semibold text-muted-foreground mb-2 block">{t.catalog.name} ({t.catalog.placeholderName})</label>
                             <Input
                                 value={label}
                                 onChange={(e) => setLabel(e.target.value)}
@@ -164,7 +166,7 @@ export default function VariablesPage() {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-semibold text-muted-foreground mb-2 block">Categoría (Ej: geografía)</label>
+                            <label className="text-sm font-semibold text-muted-foreground mb-2 block">{t.catalog.category} ({t.catalog.placeholderCategory})</label>
                             <Input
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
@@ -173,14 +175,14 @@ export default function VariablesPage() {
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="text-sm font-semibold text-muted-foreground mb-1 block">Opciones de la Variable</label>
-                            <p className="text-[10px] text-muted-foreground/60 mb-3 italic">Agrega una o varias opciones. Si es un valor fijo, agrega solo uno.</p>
+                            <label className="text-sm font-semibold text-muted-foreground mb-1 block">{t.catalog.options}</label>
+                            <p className="text-[10px] text-muted-foreground/60 mb-3 italic">{t.catalog.optionsHint}</p>
                             <div className="flex gap-2">
                                 <Input
                                     value={newOption}
                                     onChange={(e) => setNewOption(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addOption())}
-                                    placeholder="Ej: Peru o Estratega Senior..."
+                                    placeholder={t.catalog.placeholderOption}
                                     className="bg-muted border-border text-foreground focus-visible:ring-violet-500 rounded-lg h-11 transition-all flex-1"
                                 />
                                 <Button type="button" onClick={addOption} className="h-11 px-4 bg-violet-100 dark:bg-violet-900/40 hover:bg-violet-200 dark:hover:bg-violet-900/60 text-violet-700 dark:text-violet-400 shadow-sm rounded-lg">
@@ -202,19 +204,19 @@ export default function VariablesPage() {
                             )}
                         </div>
                         <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 rounded-xl h-12 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] text-[15px] mt-2">
-                            {editingId ? 'Actualizar Variable' : 'Crear Variable'}
+                            {editingId ? t.catalog.update : t.catalog.save}
                         </Button>
                     </form>
                 </Card>
 
                 <div className="md:col-span-2 space-y-6 text-foreground">
-                    <h2 className="text-2xl font-bold mb-6 text-foreground tracking-tight">Variables Existentes</h2>
+                    <h2 className="text-2xl font-bold mb-6 text-foreground tracking-tight">{t.catalog.existing}</h2>
                     {loading ? (
-                        <div className="text-muted-foreground animate-pulse">Cargando...</div>
+                        <div className="text-muted-foreground animate-pulse">{t.common.loading}</div>
                     ) : variables.length === 0 ? (
                         <div className="text-muted-foreground bg-card p-12 rounded-2xl border border-border shadow-sm text-center flex flex-col items-center justify-center gap-4">
                             <div className="w-16 h-16 bg-violet-50 dark:bg-violet-900/20 rounded-full flex items-center justify-center text-violet-500 text-2xl mb-2">📦</div>
-                            <p className="text-lg">No hay variables registradas.</p>
+                            <p className="text-lg">{t.catalog.empty}</p>
                         </div>
                     ) : (
                         <div className="grid sm:grid-cols-2 gap-5">
@@ -257,14 +259,14 @@ export default function VariablesPage() {
             <Dialog open={!!variableToDelete} onOpenChange={(open) => !open && setVariableToDelete(null)}>
                 <DialogContent className="bg-card border-border rounded-2xl shadow-xl text-foreground">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-foreground">¿Estás seguro?</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-foreground">{t.catalog.deleteConfirmTitle}</DialogTitle>
                         <DialogDescription className="text-muted-foreground pt-3">
-                            Esta acción eliminará permanentemente la variable. Si algún prompt la está usando, es posible que no funcione correctamente la próxima vez que se ejecute.
+                            {t.catalog.deleteConfirmDesc}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-4 flex gap-3">
-                        <Button variant="outline" onClick={() => setVariableToDelete(null)} className="border-border hover:bg-muted rounded-lg font-medium text-foreground">Cancelar</Button>
-                        <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-md">Sí, eliminar variable</Button>
+                        <Button variant="outline" onClick={() => setVariableToDelete(null)} className="border-border hover:bg-muted rounded-lg font-medium text-foreground">{t.common.cancel}</Button>
+                        <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-md">{t.catalog.deleteConfirmBtn}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

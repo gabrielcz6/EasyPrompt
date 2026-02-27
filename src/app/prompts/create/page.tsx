@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CreatePromptPage() {
+    const { t } = useLanguage();
     const router = useRouter();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -28,7 +30,7 @@ export default function CreatePromptPage() {
                 setLoadingVars(false);
             })
             .catch(() => {
-                toast.error('Error al cargar variables disponibles');
+                toast.error(t.prompts.create.errorLoadVars);
                 setLoadingVars(false);
             });
     }, []);
@@ -60,13 +62,13 @@ export default function CreatePromptPage() {
 
             if (res.ok) {
                 const newPrompt = await res.json();
-                toast.success('Prompt creado');
+                toast.success(t.prompts.create.successCreate);
                 router.push(`/prompts/${newPrompt.id}`);
             } else {
-                toast.error('Error al crear el prompt');
+                toast.error(t.prompts.create.errorCreate);
             }
         } catch {
-            toast.error('Error de conexión');
+            toast.error(t.catalog.errorConnection);
         } finally {
             setLoading(false);
         }
@@ -81,26 +83,26 @@ export default function CreatePromptPage() {
 
     return (
         <div className="p-8 max-w-4xl mx-auto w-full flex-1 flex flex-col items-center">
-            <h1 className="text-4xl font-extrabold mb-8 text-foreground tracking-tight text-center">Crear Nuevo Prompt</h1>
+            <h1 className="text-4xl font-extrabold mb-8 text-foreground tracking-tight text-center">{t.prompts.create.title}</h1>
 
             <Card className="p-8 bg-card border-border shadow-xl shadow-slate-200/10 rounded-2xl w-full">
                 <form onSubmit={handleCreate} className="space-y-6">
                     <div>
-                        <label className="text-sm font-semibold text-stone-600 mb-2 block">Nombre del Prompt</label>
+                        <label className="text-sm font-semibold text-stone-600 mb-2 block">{t.prompts.create.name}</label>
                         <Input
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
-                            placeholder="Ej: Clasificador de Comentarios"
+                            placeholder={t.prompts.create.namePlaceholder}
                             className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-violet-500 focus-visible:border-violet-500 transition-all rounded-lg h-11"
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-semibold text-stone-600 mb-2 block">Descripción (Opcional)</label>
+                        <label className="text-sm font-semibold text-stone-600 mb-2 block">{t.prompts.create.description}</label>
                         <Textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Breve descripción de lo que hace este prompt..."
+                            placeholder={t.prompts.create.descriptionPlaceholder}
                             className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-violet-500 focus-visible:border-violet-500 transition-all rounded-lg min-h-[120px] resize-y"
                         />
                     </div>
@@ -149,14 +151,14 @@ export default function CreatePromptPage() {
                             onClick={() => router.push('/prompts')}
                             className="text-stone-500 hover:text-stone-800 hover:bg-[#EFECE6] font-medium rounded-lg px-5 h-11"
                         >
-                            Cancelar
+                            {t.common.cancel}
                         </Button>
                         <Button
                             type="submit"
                             disabled={loading}
                             className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-md shadow-violet-500/25 rounded-lg px-6 h-11 font-medium transition-all hover:scale-105"
                         >
-                            {loading ? 'Creando...' : 'Crear e ir al Editor'}
+                            {loading ? t.prompts.create.creating : t.prompts.create.createBtn}
                         </Button>
                     </div>
                 </form>
