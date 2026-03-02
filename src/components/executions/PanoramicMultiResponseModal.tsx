@@ -52,7 +52,7 @@ export function PanoramicMultiResponseModal({
             setCollapsedIds(new Set(variations.map(v => v.id)));
         }
     };
-    const handleShare = () => {
+    const handleShare = async () => {
         try {
             const payload = JSON.stringify({
                 type: 'multi',
@@ -70,10 +70,21 @@ export function PanoramicMultiResponseModal({
             const compressed = LZString.compressToEncodedURIComponent(payload);
             const url = `${window.location.origin}/share#d=${compressed}`;
 
-            navigator.clipboard.writeText(url);
-            toast.success(language === 'es' ? 'Enlace copiado al portapapeles' : 'Link copied to clipboard', { description: language === 'es' ? 'Cualquiera con este enlace podrá ver esta comparación.' : 'Anyone with this link can view this comparison.' });
+            // Check if clipboard API is available
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(url);
+                toast.success(language === 'es' ? 'Enlace copiado al portapapeles' : 'Link copied to clipboard', {
+                    description: language === 'es' ? 'Cualquiera con este enlace podrá ver esta comparación.' : 'Anyone with this link can view this comparison.'
+                });
+            } else {
+                // Fallback for non-secure contexts or browsers without clipboard API
+                throw new Error('Clipboard API not available');
+            }
         } catch (error) {
-            toast.error(language === 'es' ? 'Error al generar el enlace de compartir' : 'Error generating share link');
+            console.error("Error generating/copying share link:", error);
+            toast.error(language === 'es' ? 'Error al generar el enlace de compartir' : 'Error generating share link', {
+                description: language === 'es' ? 'Intenta copiar la URL del navegador si el problema persiste.' : 'Try copying the browser URL if the problem persists.'
+            });
         }
     };
 
