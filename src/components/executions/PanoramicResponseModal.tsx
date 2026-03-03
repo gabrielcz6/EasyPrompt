@@ -2,14 +2,10 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Share2, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import LZString from 'lz-string';
 import { exportSingleResponseToDocx } from '@/lib/docx-exporter';
 import { useLanguage } from '@/context/LanguageContext';
-import { copyToClipboard } from '@/lib/clipboard';
-import { Input } from '@/components/ui/input';
-import { Copy } from 'lucide-react';
 
 interface PanoramicResponseModalProps {
     open: boolean;
@@ -31,37 +27,6 @@ export function PanoramicResponseModal({
     latencyMs,
 }: PanoramicResponseModalProps) {
     const { language, t } = useLanguage();
-    const [showShareFallback, setShowShareFallback] = useState(false);
-    const [shareUrl, setShareUrl] = useState('');
-
-    const handleShare = async () => {
-        try {
-            const payload = JSON.stringify({
-                type: 'single',
-                title,
-                aiOutput,
-                renderedPrompt,
-                tokensTotal,
-                latencyMs
-            });
-            const compressed = LZString.compressToEncodedURIComponent(payload);
-            const url = `${window.location.origin}/share#d=${compressed}`;
-            setShareUrl(url);
-
-            const success = await copyToClipboard(url);
-            if (success) {
-                toast.success(language === 'es' ? 'Enlace copiado al portapapeles' : 'Link copied to clipboard', {
-                    description: language === 'es' ? 'Cualquiera con este enlace podrá ver esta respuesta.' : 'Anyone with this link can view this response.'
-                });
-            } else {
-                setShowShareFallback(true);
-            }
-        } catch (error) {
-            console.error("Error generating share link:", error);
-            toast.error(language === 'es' ? 'Error al generar el enlace' : 'Error generating link');
-        }
-    };
-
     const handleExportWord = async () => {
         try {
             await exportSingleResponseToDocx(title, renderedPrompt, aiOutput, tokensTotal, latencyMs);
@@ -96,10 +61,6 @@ export function PanoramicResponseModal({
                                 </div>
                             )}
                             <div className="h-6 w-px bg-border mx-2"></div>
-                            <Button variant="outline" size="sm" onClick={handleShare} className="h-8 gap-1.5 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/30">
-                                <Share2 size={14} />
-                                {t.common.share}
-                            </Button>
                             <Button variant="default" size="sm" onClick={handleExportWord} className="h-8 gap-1.5 bg-violet-600 hover:bg-violet-700 text-white mr-8">
                                 <FileText size={14} />
                                 Word
@@ -180,45 +141,6 @@ export function PanoramicResponseModal({
                         background-color: rgba(139, 92, 246, 0.5) !important;
                     }
                 `}</style>
-
-                {/* Manual Share Fallback Dialog */}
-                <Dialog open={showShareFallback} onOpenChange={setShowShareFallback}>
-                    <DialogContent className="sm:max-w-md bg-card border-violet-200 dark:border-violet-900 shadow-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl font-bold text-foreground">
-                                {language === 'es' ? 'Copiar enlace manualmente' : 'Copy link manually'}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <div className="flex items-center space-x-2 p-4 pt-2">
-                            <div className="grid flex-1 gap-2">
-                                <label htmlFor="link" className="sr-only">Link</label>
-                                <Input
-                                    id="link"
-                                    defaultValue={shareUrl}
-                                    readOnly
-                                    className="bg-muted/50 border-border text-xs focus-visible:ring-violet-500"
-                                />
-                            </div>
-                            <Button
-                                type="button"
-                                size="sm"
-                                className="px-3 bg-violet-600 hover:bg-violet-700"
-                                onClick={() => {
-                                    copyToClipboard(shareUrl);
-                                    toast.success(language === 'es' ? 'Copiado' : 'Copied');
-                                }}
-                            >
-                                <span className="sr-only">Copy</span>
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground px-4 pb-4">
-                            {language === 'es'
-                                ? 'Tu navegador bloqueó el copiado automático. Por favor, copia el enlace superior.'
-                                : 'Your browser blocked automatic copying. Please copy the link above manually.'}
-                        </p>
-                    </DialogContent>
-                </Dialog>
             </DialogContent>
         </Dialog>
     );

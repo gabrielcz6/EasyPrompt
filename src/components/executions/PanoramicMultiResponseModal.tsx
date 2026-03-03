@@ -1,14 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Share2, FileText, ChevronRight, ChevronLeft, Minimize2, Maximize2, LayoutPanelLeft, Trash2, Copy } from 'lucide-react';
+import { FileText, ChevronRight, ChevronLeft, Minimize2, Maximize2, LayoutPanelLeft, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import LZString from 'lz-string';
 import { exportMultiResponseToDocx } from '@/lib/docx-exporter';
 import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { copyToClipboard } from '@/lib/clipboard';
-import { Input } from '@/components/ui/input';
 
 interface Variation {
     id: string;
@@ -39,8 +36,6 @@ export function PanoramicMultiResponseModal({
     const { language, t } = useLanguage();
     const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
     const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
-    const [showShareFallback, setShowShareFallback] = useState(false);
-    const [shareUrl, setShareUrl] = useState('');
 
     const toggleCollapse = (id: string) => {
         const next = new Set(collapsedIds);
@@ -54,38 +49,6 @@ export function PanoramicMultiResponseModal({
             setCollapsedIds(new Set());
         } else {
             setCollapsedIds(new Set(variations.map(v => v.id)));
-        }
-    };
-    const handleShare = async () => {
-        try {
-            const payload = JSON.stringify({
-                type: 'multi',
-                renderedPrompt,
-                modelConfig,
-                variations: variations.map(v => ({
-                    id: v.id,
-                    versionNumber: v.versionNumber,
-                    aiOutput: v.aiOutput,
-                    tokensTotal: v.tokensTotal,
-                    latencyMs: v.latencyMs,
-                    createdAt: v.createdAt
-                }))
-            });
-            const compressed = LZString.compressToEncodedURIComponent(payload);
-            const url = `${window.location.origin}/share#d=${compressed}`;
-            setShareUrl(url);
-
-            const success = await copyToClipboard(url);
-            if (success) {
-                toast.success(language === 'es' ? 'Enlace copiado al portapapeles' : 'Link copied to clipboard', {
-                    description: language === 'es' ? 'Cualquiera con este enlace podrá ver esta comparación.' : 'Anyone with this link can view this comparison.'
-                });
-            } else {
-                setShowShareFallback(true);
-            }
-        } catch (error) {
-            console.error("Error generating share link:", error);
-            toast.error(language === 'es' ? 'Error al generar el enlace' : 'Error generating link');
         }
     };
 
@@ -120,10 +83,6 @@ export function PanoramicMultiResponseModal({
                                 </span>
                             </div>
                             <div className="h-6 w-px bg-border mx-2 print:hidden"></div>
-                            <Button variant="outline" size="sm" onClick={handleShare} className="h-8 gap-1.5 border-violet-200 text-violet-700 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-300 print:hidden">
-                                <Share2 size={14} />
-                                {t.common.share}
-                            </Button>
                             <Button variant="default" size="sm" onClick={handleExportWord} className="h-8 gap-1.5 bg-violet-600 hover:bg-violet-700 text-white mr-4 print:hidden">
                                 <FileText size={14} />
                                 Word
@@ -334,44 +293,6 @@ export function PanoramicMultiResponseModal({
                     }
                 `}</style>
 
-                {/* Manual Share Fallback Dialog */}
-                <Dialog open={showShareFallback} onOpenChange={setShowShareFallback}>
-                    <DialogContent className="sm:max-w-md bg-card border-violet-200 dark:border-violet-900 shadow-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl font-bold text-foreground">
-                                {language === 'es' ? 'Copiar enlace manualmente' : 'Copy link manually'}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <div className="flex items-center space-x-2 p-4 pt-2">
-                            <div className="grid flex-1 gap-2">
-                                <label htmlFor="link-multi" className="sr-only">Link</label>
-                                <Input
-                                    id="link-multi"
-                                    defaultValue={shareUrl}
-                                    readOnly
-                                    className="bg-muted/50 border-border text-xs focus-visible:ring-violet-500"
-                                />
-                            </div>
-                            <Button
-                                type="button"
-                                size="sm"
-                                className="px-3 bg-violet-600 hover:bg-violet-700"
-                                onClick={() => {
-                                    copyToClipboard(shareUrl);
-                                    toast.success(language === 'es' ? 'Copiado' : 'Copied');
-                                }}
-                            >
-                                <span className="sr-only">Copy</span>
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground px-4 pb-4">
-                            {language === 'es'
-                                ? 'Tu navegador bloqueó el copiado automático. Por favor, copia el enlace superior.'
-                                : 'Your browser blocked automatic copying. Please copy the link above manually.'}
-                        </p>
-                    </DialogContent>
-                </Dialog>
             </DialogContent>
         </Dialog>
     );

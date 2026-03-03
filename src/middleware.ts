@@ -22,7 +22,7 @@ export async function middleware(req: NextRequest) {
 
     // 3. Define public routes
     const isLoginPage = pathname === '/login';
-    const isPublicPath = pathname === '/' || pathname === '/home' || pathname === '/share';
+    const isPublicPath = pathname === '/' || pathname === '/home';
     const isMeApi = pathname === '/api/auth/me';
 
     // 4. Logic based on auth state
